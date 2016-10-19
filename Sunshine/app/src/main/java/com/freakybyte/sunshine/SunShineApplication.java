@@ -6,11 +6,11 @@ import android.app.Application;
  * Created by Jose Torres on 28/09/2016.
  */
 
-public class SunShineApplication extends Application {
+public class SunshineApplication extends Application {
 
-    private static SunShineApplication singleton;
+    private static SunshineApplication singleton;
 
-    public static SunShineApplication getInstance() {
+    public static SunshineApplication getInstance() {
         return singleton;
     }
 

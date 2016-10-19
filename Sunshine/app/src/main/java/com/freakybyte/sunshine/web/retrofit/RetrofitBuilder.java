@@ -1,7 +1,7 @@
 package com.freakybyte.sunshine.web.retrofit;
 
 import com.freakybyte.sunshine.R;
-import com.freakybyte.sunshine.SunShineApplication;
+import com.freakybyte.sunshine.SunshineApplication;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -17,7 +17,7 @@ public class RetrofitBuilder {
     public static Retrofit getRetrofitBuilder() {
         if (retrofit == null)
             retrofit = new Retrofit.Builder()
-                    .baseUrl(SunShineApplication.getInstance().getString(R.string.url_base))
+                    .baseUrl(SunshineApplication.getInstance().getString(R.string.url_base))
                     .addConverterFactory(JacksonConverterFactory.create())
                     .build();
         return retrofit;

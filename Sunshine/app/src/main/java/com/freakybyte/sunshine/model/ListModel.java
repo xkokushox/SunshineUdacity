@@ -16,7 +16,7 @@ public class ListModel {
     }
 
     @JsonProperty("dt")
-    private Integer dt;
+    private long dt;
     @JsonProperty("temp")
     private Temp temp;
     @JsonProperty("pressure")
@@ -38,7 +38,7 @@ public class ListModel {
      * @return The dt
      */
     @JsonProperty("dt")
-    public Integer getDt() {
+    public long getDt() {
         return dt;
     }
 
@@ -46,7 +46,7 @@ public class ListModel {
      * @param dt The dt
      */
     @JsonProperty("dt")
-    public void setDt(Integer dt) {
+    public void setDt(long dt) {
         this.dt = dt;
     }
 

@@ -14,7 +14,7 @@ import retrofit2.http.QueryMap;
 
 public interface OpenWeatherMapService {
 
-    @GET("forecast/daily?mode=json&units=metric&cnt=7")
+    @GET("forecast/daily?")
     Call<WeatherModel> getWeatherByPostalCode(@QueryMap Map<String, String> options);
 
 }
