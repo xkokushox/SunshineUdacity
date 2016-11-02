@@ -1,12 +1,23 @@
 package com.freakybyte.sunshine.data.tables;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
  * Created by Jose Torres on 31/10/2016.
  */
 
-public class LocationEntry implements BaseColumns {
+public class LocationEntry extends WeatherContract implements BaseColumns{
+
+    public static final Uri CONTENT_URI =
+            BASE_CONTENT_URI.buildUpon().appendPath(PATH_LOCATION).build();
+    public static final String CONTENT_TYPE =
+            ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
+    public static final String CONTENT_ITEM_TYPE =
+            ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
+
     public static final String TABLE_NAME = "location";
 
     // The location setting string is what will be sent to openweathermap
@@ -31,4 +42,8 @@ public class LocationEntry implements BaseColumns {
             COLUMN_COORD_LONG + " REAL NOT NULL " +
             " );";
 
+
+    public static Uri buildLocationUri(long id) {
+        return ContentUris.withAppendedId(CONTENT_URI, id);
+    }
 }

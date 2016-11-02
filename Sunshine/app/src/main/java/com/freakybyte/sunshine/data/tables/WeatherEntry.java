@@ -1,13 +1,26 @@
 package com.freakybyte.sunshine.data.tables;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.net.Uri;
 import android.provider.BaseColumns;
+
+import static com.freakybyte.sunshine.utils.Utils.normalizeDate;
 
 /**
  * Created by Jose Torres on 31/10/2016.
  */
 
     /* Inner class that defines the table contents of the weather table */
-public class WeatherEntry implements BaseColumns {
+public class WeatherEntry extends WeatherContract implements BaseColumns {
+
+    public static final Uri CONTENT_URI =
+            BASE_CONTENT_URI.buildUpon().appendPath(PATH_WEATHER).build();
+
+    public static final String CONTENT_TYPE =
+            ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_WEATHER;
+    public static final String CONTENT_ITEM_TYPE =
+            ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_WEATHER;
 
     public static final String TABLE_NAME = "weather";
 
@@ -68,5 +81,46 @@ public class WeatherEntry implements BaseColumns {
             // per location, it's created a UNIQUE constraint with REPLACE strategy
             " UNIQUE (" + COLUMN_DATE + ", " +
             COLUMN_LOC_KEY + ") ON CONFLICT REPLACE);";
+
+    public static Uri buildWeatherUri(long id) {
+        // weather
+        return ContentUris.withAppendedId(CONTENT_URI, id);
+    }
+
+    /*
+            Student: Fill in this buildWeatherLocation function
+         */
+    public static Uri buildWeatherLocation(String locationSetting) {
+        return null;
+    }
+
+    public static Uri buildWeatherLocationWithStartDate(String locationSetting, long startDate) {
+        // weather/[Location_query]/[date]
+        long normalizedDate = normalizeDate(startDate);
+        return CONTENT_URI.buildUpon().appendPath(locationSetting)
+                .appendQueryParameter(COLUMN_DATE, Long.toString(normalizedDate)).build();
+    }
+
+    public static Uri buildWeatherLocationWithDate(String locationSetting, long date) {
+        // weather/[Location_query]/[date]
+        return CONTENT_URI.buildUpon().appendPath(locationSetting)
+                .appendPath(Long.toString(normalizeDate(date))).build();
+    }
+
+    public static String getLocationSettingFromUri(Uri uri) {
+        return uri.getPathSegments().get(1);
+    }
+
+    public static long getDateFromUri(Uri uri) {
+        return Long.parseLong(uri.getPathSegments().get(2));
+    }
+
+    public static long getStartDateFromUri(Uri uri) {
+        String dateString = uri.getQueryParameter(COLUMN_DATE);
+        if (null != dateString && dateString.length() > 0)
+            return Long.parseLong(dateString);
+        else
+            return 0;
+    }
 }
 
