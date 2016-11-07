@@ -22,7 +22,7 @@ import java.util.Set;
  */
 
 public class TestUtilities extends AndroidTestCase {
-    static final String TEST_LOCATION = "99705";
+    public static final String TEST_LOCATION = "99705";
     public static final long TEST_DATE = 1419033600L;  // December 20th, 2014
 
     public static void validateCursor(String error, Cursor valueCursor, ContentValues expectedValues) {
@@ -145,7 +145,7 @@ public class TestUtilities extends AndroidTestCase {
         }
     }
 
-    static TestContentObserver getTestContentObserver() {
+    public static TestContentObserver getTestContentObserver() {
         return TestContentObserver.getTestContentObserver();
     }
 }
