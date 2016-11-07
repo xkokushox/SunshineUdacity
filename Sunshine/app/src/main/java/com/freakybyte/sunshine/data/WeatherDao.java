@@ -17,4 +17,5 @@ public class WeatherDao {
 
     public WeatherDao() {
     }
+
 }
