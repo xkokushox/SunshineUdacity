@@ -1,10 +1,11 @@
 package com.freakybyte.sunshine.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WeatherModel {
 
     @JsonProperty("city")
@@ -100,7 +101,6 @@ public class WeatherModel {
     public void setList(java.util.List<ListModel> list) {
         this.list = list;
     }
-
 
 
 }

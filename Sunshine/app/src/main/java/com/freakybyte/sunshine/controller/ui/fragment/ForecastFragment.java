@@ -23,6 +23,7 @@ import android.widget.ListView;
 import com.freakybyte.sunshine.R;
 import com.freakybyte.sunshine.controller.ui.activity.DetailActivity;
 import com.freakybyte.sunshine.controller.ui.activity.SettingsActivity;
+import com.freakybyte.sunshine.data.WeatherDao;
 import com.freakybyte.sunshine.model.WeatherModel;
 import com.freakybyte.sunshine.utils.DebugUtils;
 import com.freakybyte.sunshine.utils.SunshineUtil;
@@ -93,15 +94,12 @@ public class ForecastFragment extends Fragment {
 
     private void updateWeather() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String location = prefs.getString(getString(R.string.pref_location_key),
-                getString(R.string.pref_location_default));
-        String unit = prefs.getString(getString(R.string.pref_location_key),
-                getString(R.string.pref_units_metric));
-
-        getWeatherReport(location, "json", unit, 7);
+        String location = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        String unit = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_units_metric));
+        getWeatherReport(location, "json", unit, 14);
     }
 
-    private void getWeatherReport(String zipCode, String mode, String unit, int count) {
+    private void getWeatherReport(final String zipCode, String mode, String unit, int count) {
         Map<String, String> params = new ArrayMap<>();
         params.put("q", zipCode);
         params.put("mode", mode);
@@ -115,6 +113,8 @@ public class ForecastFragment extends Fragment {
 
                 switch (response.code()) {
                     case 200:
+                        WeatherDao mWeatherDao = WeatherDao.getInstance();
+                        mWeatherDao.addWeatherList(zipCode, response.body());
                         mForecastAdapter.clear();
                         Time dayTime = new Time();
                         dayTime.setToNow();
@@ -138,7 +138,7 @@ public class ForecastFragment extends Fragment {
 
             @Override
             public void onFailure(Call<WeatherModel> call, Throwable t) {
-                DebugUtils.logError(TAG, "LogInInServer:: onFailure:: " + t.getLocalizedMessage());
+                DebugUtils.logError(TAG, "GetWeatherReport:: onFailure:: " + t.getLocalizedMessage());
             }
 
         });
