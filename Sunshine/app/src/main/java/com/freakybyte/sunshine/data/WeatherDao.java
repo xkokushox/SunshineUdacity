@@ -1,11 +1,11 @@
 package com.freakybyte.sunshine.data;
 
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
+import android.support.v4.content.CursorLoader;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -13,13 +13,12 @@ import com.freakybyte.sunshine.SunshineApplication;
 import com.freakybyte.sunshine.data.tables.LocationEntry;
 import com.freakybyte.sunshine.data.tables.WeatherEntry;
 import com.freakybyte.sunshine.model.ListModel;
-import com.freakybyte.sunshine.model.Weather;
 import com.freakybyte.sunshine.model.WeatherModel;
+import com.freakybyte.sunshine.utils.Utils;
 
-import org.json.JSONObject;
-
-import java.util.List;
 import java.util.Vector;
+
+import static com.freakybyte.sunshine.utils.SunshineUtil.formatHighLows;
 
 /**
  * Created by Jose Torres on 31/10/2016.
@@ -30,6 +29,29 @@ public class WeatherDao {
 
     private static WeatherDao singleton;
     private Context mContext;
+
+    public static final int COL_WEATHER_ID = 0;
+    public static final int COL_WEATHER_DATE = 1;
+    public static final int COL_WEATHER_DESC = 2;
+    public static final int COL_WEATHER_MAX_TEMP = 3;
+    public static final int COL_WEATHER_MIN_TEMP = 4;
+    public static final int COL_LOCATION_SETTING = 5;
+    public static final int COL_WEATHER_CONDITION_ID = 6;
+    public static final int COL_COORD_LAT = 7;
+    public static final int COL_COORD_LONG = 8;
+
+    private static final String[] FORECAST_COLUMNS = {
+            WeatherEntry.TABLE_NAME + "." + WeatherEntry._ID,
+            WeatherEntry.COLUMN_DATE,
+            WeatherEntry.COLUMN_SHORT_DESC,
+            WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherEntry.COLUMN_MIN_TEMP,
+            LocationEntry.COLUMN_LOCATION_SETTING,
+            WeatherEntry.COLUMN_WEATHER_ID,
+            LocationEntry.COLUMN_COORD_LAT,
+            LocationEntry.COLUMN_COORD_LONG
+    };
+
 
     public static WeatherDao getInstance() {
         if (singleton == null)
@@ -49,6 +71,7 @@ public class WeatherDao {
     public WeatherDao(Context context) {
         this.mContext = context;
     }
+
 
     public void addWeatherList(String locationSetting, WeatherModel weather) {
         LocationDao mLocationDao = LocationDao.getInstance();
@@ -101,6 +124,41 @@ public class WeatherDao {
             } while (cur.moveToNext());
         }
         Log.d(TAG, "Days Inserted:: " + cVVector.size());
+    }
+
+    public CursorLoader getWeatherCursorWithStartDate(String locationSetting) {
+        String sortOrder = WeatherEntry.COLUMN_DATE + " ASC";
+        Uri weatherForLocationUri = WeatherEntry.buildWeatherLocationWithStartDate(
+                locationSetting, System.currentTimeMillis());
+
+        return new CursorLoader(getContext(),
+                weatherForLocationUri,
+                FORECAST_COLUMNS,
+                null,
+                null,
+                sortOrder);
+    }
+
+    public CursorLoader getWeatherDetailCursor(Uri uri) {
+        return new CursorLoader(
+                getContext(),
+                uri,
+                FORECAST_COLUMNS,
+                null,
+                null,
+                null
+        );
+    }
+
+
+    public String convertCursorRowToUXFormat(Cursor cursor) {
+        String highAndLow = formatHighLows(
+                cursor.getDouble(COL_WEATHER_MAX_TEMP),
+                cursor.getDouble(COL_WEATHER_MIN_TEMP));
+
+        return Utils.formatDate(cursor.getLong(COL_WEATHER_DATE)) +
+                " - " + cursor.getString(COL_WEATHER_DESC) +
+                " - " + highAndLow;
     }
 
     private Context getContext() {

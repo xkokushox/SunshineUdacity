@@ -1,9 +1,14 @@
 package com.freakybyte.sunshine.controller.ui.fragment;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
@@ -17,6 +22,8 @@ import android.widget.TextView;
 
 import com.freakybyte.sunshine.R;
 import com.freakybyte.sunshine.controller.ui.activity.SettingsActivity;
+import com.freakybyte.sunshine.data.WeatherDao;
+import com.freakybyte.sunshine.utils.Utils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,7 +32,7 @@ import butterknife.ButterKnife;
  * Created by Jose Torres on 18/10/2016.
  */
 
-public class DetailFragment extends Fragment {
+public class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final static String TAG = "DetailFragment";
 
@@ -33,7 +40,11 @@ public class DetailFragment extends Fragment {
     public TextView textForecast;
 
     private static final String FORECAST_SHARE_HASHTAG = " #SunshineApp";
+    private Uri mForecastUri;
+    private ShareActionProvider mShareActionProvider;
     private String mForecastStr;
+    private WeatherDao mWeatherDao;
+    private static final int DETAIL_LOADER = 0;
 
     public DetailFragment() {
     }
@@ -50,8 +61,14 @@ public class DetailFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mForecastStr = getArguments().getString(Intent.EXTRA_TEXT, "Empty");
-        textForecast.setText(mForecastStr);
+        mWeatherDao = WeatherDao.getInstance();
+
+        if (getActivity().getIntent() != null) {
+            mForecastUri = getActivity().getIntent().getData();
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+        } else {
+            mForecastStr = "";
+        }
     }
 
 
@@ -71,7 +88,7 @@ public class DetailFragment extends Fragment {
         MenuItem menuItem = menu.findItem(R.id.action_share);
         ShareActionProvider mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
 
-        if (mShareActionProvider != null) {
+        if (mForecastStr != null) {
             mShareActionProvider.setShareIntent(createShareForecastIntent());
         } else {
             Log.d(TAG, "Share Action Provider is null?");
@@ -90,5 +107,45 @@ public class DetailFragment extends Fragment {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.v(TAG, "In onCreateLoader");
+        return mWeatherDao.getWeatherDetailCursor(mForecastUri);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        Log.v(TAG, "In onLoadFinished");
+        if (!data.moveToFirst()) { return; }
+
+        String dateString = Utils.formatDate(
+                data.getLong(WeatherDao.COL_WEATHER_DATE));
+
+        String weatherDescription =
+                data.getString(WeatherDao.COL_WEATHER_DESC);
+
+        boolean isMetric = Utils.isMetric(getActivity());
+
+        String high = Utils.formatTemperature(
+                data.getDouble(WeatherDao.COL_WEATHER_MAX_TEMP), isMetric);
+
+        String low = Utils.formatTemperature(
+                data.getDouble(WeatherDao.COL_WEATHER_MIN_TEMP), isMetric);
+
+        mForecastStr = String.format("%s - %s - %s/%s", dateString, weatherDescription, high, low);
+
+        textForecast.setText(mForecastStr);
+
+        // If onCreateOptionsMenu has already happened, we need to update the share intent now.
+        if (mShareActionProvider != null) {
+            mShareActionProvider.setShareIntent(createShareForecastIntent());
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
     }
 }

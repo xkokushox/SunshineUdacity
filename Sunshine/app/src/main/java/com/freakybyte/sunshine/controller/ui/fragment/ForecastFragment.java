@@ -2,11 +2,15 @@ package com.freakybyte.sunshine.controller.ui.fragment;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.util.ArrayMap;
 import android.text.format.Time;
 import android.util.Log;
@@ -23,10 +27,13 @@ import android.widget.ListView;
 import com.freakybyte.sunshine.R;
 import com.freakybyte.sunshine.controller.ui.activity.DetailActivity;
 import com.freakybyte.sunshine.controller.ui.activity.SettingsActivity;
+import com.freakybyte.sunshine.controller.ui.adapter.ForecastAdapter;
 import com.freakybyte.sunshine.data.WeatherDao;
+import com.freakybyte.sunshine.data.tables.WeatherEntry;
 import com.freakybyte.sunshine.model.WeatherModel;
 import com.freakybyte.sunshine.utils.DebugUtils;
 import com.freakybyte.sunshine.utils.SunshineUtil;
+import com.freakybyte.sunshine.utils.Utils;
 import com.freakybyte.sunshine.web.retrofit.OpenWeatherMapService;
 import com.freakybyte.sunshine.web.retrofit.RetrofitBuilder;
 
@@ -42,16 +49,20 @@ import retrofit2.Response;
 /**
  * Created by Jose Torres in FreakyByte on 28/06/16.
  */
-public class ForecastFragment extends Fragment {
+public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static String TAG = "ForecastFragment";
 
     private View rootView;
     @BindView(R.id.listview_forecast)
     public ListView listView;
 
+    private WeatherDao mWeatherDao;
+
     private OpenWeatherMapService apiService;
-    private ArrayAdapter<String> mForecastAdapter;
+    private ForecastAdapter mForecastAdapter;
     private ArrayList<String> weekForecast = new ArrayList<>();
+
+    private static final int FORECAST_LOADER = 0;
 
     public ForecastFragment() {
 
@@ -65,19 +76,34 @@ public class ForecastFragment extends Fragment {
 
         apiService = RetrofitBuilder.getRetrofitBuilder().create(OpenWeatherMapService.class);
 
-        mForecastAdapter = new ArrayAdapter<>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, weekForecast);
+        mForecastAdapter = new ForecastAdapter(getActivity(), null, 0);
+
         listView.setAdapter(mForecastAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent mDetail = new Intent(getContext(), DetailActivity.class);
-                mDetail.putExtra(Intent.EXTRA_TEXT, mForecastAdapter.getItem(i));
-                startActivity(mDetail);
+                Cursor cursor = (Cursor) adapterView.getItemAtPosition(i);
+                if (cursor != null) {
+                    String locationSetting = Utils.getPreferredLocation(getActivity());
+                    Intent intent = new Intent(getActivity(), DetailActivity.class)
+                            .setData(WeatherEntry.buildWeatherLocationWithDate(
+                                    locationSetting, cursor.getLong(WeatherDao.COL_WEATHER_DATE)
+                            ));
+                    startActivity(intent);
+                }
             }
         });
 
+        mWeatherDao = WeatherDao.getInstance();
+
         setHasOptionsMenu(true);
         return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(FORECAST_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -90,6 +116,10 @@ public class ForecastFragment extends Fragment {
     public void onStart() {
         super.onStart();
         updateWeather();
+    }
+
+    private void getWeatherFromDb() {
+        getLoaderManager().initLoader(FORECAST_LOADER, null, ForecastFragment.this);
     }
 
     private void updateWeather() {
@@ -115,20 +145,7 @@ public class ForecastFragment extends Fragment {
                     case 200:
                         WeatherDao mWeatherDao = WeatherDao.getInstance();
                         mWeatherDao.addWeatherList(zipCode, response.body());
-                        mForecastAdapter.clear();
-                        Time dayTime = new Time();
-                        dayTime.setToNow();
-                        int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
-                        for (int i = 0; i < response.body().getList().size(); i++) {
-                            long dateTime = dayTime.setJulianDay(julianStartDay + i);
-                            String day = SunshineUtil.getReadableDateString(dateTime);
-                            String description = response.body().getList().get(i).getWeather().get(0).getDescription();
-                            String highAndLow = SunshineUtil.formatHighLows(response.body().getList().get(i).getTemp().getMax(), response.body().getList().get(i).getTemp().getMin());
-                            weekForecast.add(day + " - " + description + " - " + highAndLow);
-                        }
-
-                        mForecastAdapter.notifyDataSetChanged();
-                        DebugUtils.logDebug(TAG, "All cool:: " + response.body().getCity().getName());
+                        getWeatherFromDb();
                         break;
                     default:
                         DebugUtils.logError(TAG, "LogInInServer:: Error Code:: " + response.code());
@@ -139,6 +156,7 @@ public class ForecastFragment extends Fragment {
             @Override
             public void onFailure(Call<WeatherModel> call, Throwable t) {
                 DebugUtils.logError(TAG, "GetWeatherReport:: onFailure:: " + t.getLocalizedMessage());
+                getWeatherFromDb();
             }
 
         });
@@ -164,9 +182,25 @@ public class ForecastFragment extends Fragment {
         }
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String locationSetting = Utils.getPreferredLocation(getActivity());
+
+        return mWeatherDao.getWeatherCursorWithStartDate(locationSetting);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        mForecastAdapter.swapCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mForecastAdapter.swapCursor(null);
+    }
+
     private void openPreferredLocationInMap() {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String location = sharedPrefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        String location = Utils.getPreferredLocation(getActivity());
 
         Uri geoLocation = Uri.parse("geo:0,0?").buildUpon()
                 .appendQueryParameter("q", location)

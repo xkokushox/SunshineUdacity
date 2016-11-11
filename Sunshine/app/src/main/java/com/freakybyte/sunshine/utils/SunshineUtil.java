@@ -1,5 +1,7 @@
 package com.freakybyte.sunshine.utils;
 
+import android.content.Context;
+
 import java.text.SimpleDateFormat;
 
 /**
@@ -24,6 +26,12 @@ public class SunshineUtil {
         long roundedLow = Math.round(low);
 
         String highLowStr = roundedHigh + "/" + roundedLow;
+        return highLowStr;
+    }
+
+    private String formatHighLows(Context mContext, double high, double low) {
+        boolean isMetric = Utils.isMetric(mContext);
+        String highLowStr = Utils.formatTemperature(high, isMetric) + "/" + Utils.formatTemperature(low, isMetric);
         return highLowStr;
     }
 }

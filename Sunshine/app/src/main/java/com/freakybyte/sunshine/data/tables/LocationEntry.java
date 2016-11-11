@@ -9,7 +9,7 @@ import android.provider.BaseColumns;
  * Created by Jose Torres on 31/10/2016.
  */
 
-public class LocationEntry extends WeatherContract implements BaseColumns{
+public class LocationEntry extends WeatherContract implements BaseColumns {
 
     public static final Uri CONTENT_URI =
             BASE_CONTENT_URI.buildUpon().appendPath(PATH_LOCATION).build();
@@ -46,4 +46,6 @@ public class LocationEntry extends WeatherContract implements BaseColumns{
     public static Uri buildLocationUri(long id) {
         return ContentUris.withAppendedId(CONTENT_URI, id);
     }
+
+
 }
