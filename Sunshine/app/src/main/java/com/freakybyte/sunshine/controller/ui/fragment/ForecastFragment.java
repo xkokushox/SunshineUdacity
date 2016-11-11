@@ -60,9 +60,11 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     private OpenWeatherMapService apiService;
     private ForecastAdapter mForecastAdapter;
-    private ArrayList<String> weekForecast = new ArrayList<>();
+    private String mLocation = "";
 
     private static final int FORECAST_LOADER = 0;
+
+    private SharedPreferences prefs;
 
     public ForecastFragment() {
 
@@ -75,6 +77,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         ButterKnife.bind(this, rootView);
 
         apiService = RetrofitBuilder.getRetrofitBuilder().create(OpenWeatherMapService.class);
+        prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         mForecastAdapter = new ForecastAdapter(getActivity(), null, 0);
 
@@ -115,7 +118,13 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onStart() {
         super.onStart();
-        updateWeather();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!mLocation.equals(prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default))))
+            updateWeather();
     }
 
     private void getWeatherFromDb() {
@@ -123,10 +132,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     private void updateWeather() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String location = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        mLocation = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
         String unit = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_units_metric));
-        getWeatherReport(location, "json", unit, 14);
+        getWeatherReport(mLocation, "json", unit, 14);
     }
 
     private void getWeatherReport(final String zipCode, String mode, String unit, int count) {
@@ -160,6 +168,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             }
 
         });
+    }
+
+    public void onLocationChanged() {
+
     }
 
     @Override

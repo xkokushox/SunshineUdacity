@@ -15,6 +15,8 @@ public class MainActivity extends BaseActivity {
     @BindView(R.id.toolbar)
     public Toolbar toolbar;
 
+    private static final String FORECASTFRAGMENT_TAG=" Forecast_Fragment";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,7 +28,7 @@ public class MainActivity extends BaseActivity {
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new ForecastFragment())
+                    .add(R.id.container, new ForecastFragment(), FORECASTFRAGMENT_TAG)
                     .commit();
         }
     }
