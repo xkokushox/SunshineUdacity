@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import android.text.format.Time;
 
 import com.freakybyte.sunshine.R;
+import com.freakybyte.sunshine.SunshineApplication;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -47,7 +48,7 @@ public class Utils {
         } else {
             temp = temperature;
         }
-        return String.format("%.0f", temp);
+        return String.format(SunshineApplication.getInstance().getString(R.string.format_temperature), temp);
     }
 
     public static String formatDate(long dateInMillis) {
