@@ -58,6 +58,17 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     private WeatherDao mWeatherDao;
     private static final int DETAIL_LOADER = 0;
 
+    public static final int COL_WEATHER_ID = 0;
+    public static final int COL_WEATHER_DATE = 1;
+    public static final int COL_WEATHER_DESC = 2;
+    public static final int COL_WEATHER_MAX_TEMP = 3;
+    public static final int COL_WEATHER_MIN_TEMP = 4;
+    public static final int COL_WEATHER_HUMIDITY = 5;
+    public static final int COL_WEATHER_PRESSURE = 6;
+    public static final int COL_WEATHER_WIND_SPEED = 7;
+    public static final int COL_WEATHER_DEGREES = 8;
+    public static final int COL_WEATHER_CONDITION_ID = 9;
+
     public DetailFragment() {
     }
 
@@ -118,44 +129,44 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null && data.moveToFirst()) {
             // Read weather condition ID from cursor
-            int weatherId = data.getInt(WeatherDao.COL_WEATHER_CONDITION_ID);
+            int weatherId = data.getInt(COL_WEATHER_CONDITION_ID);
             // Use placeholder Image
             mIconView.setImageResource(R.mipmap.ic_launcher);
 
             // Read date from cursor and update views for day of week and date
-            long date = data.getLong(WeatherDao.COL_WEATHER_DATE);
+            long date = data.getLong(COL_WEATHER_DATE);
             String friendlyDateText = Utils.getDayName(getActivity(), date);
             String dateText = Utils.getFormattedMonthDay(getActivity(), date);
             mFriendlyDateView.setText(friendlyDateText);
             mDateView.setText(dateText);
 
             // Read description from cursor and update view
-            String description = data.getString(WeatherDao.COL_WEATHER_DESC);
+            String description = data.getString(COL_WEATHER_DESC);
             mDescriptionView.setText(description);
 
             // Read high temperature from cursor and update view
             boolean isMetric = Utils.isMetric(getActivity());
 
-            double high = data.getDouble(WeatherDao.COL_WEATHER_MAX_TEMP);
+            double high = data.getDouble(COL_WEATHER_MAX_TEMP);
             String highString = Utils.formatTemperature(high, isMetric);
             mHighTempView.setText(highString);
 
             // Read low temperature from cursor and update view
-            double low = data.getDouble(WeatherDao.COL_WEATHER_MIN_TEMP);
+            double low = data.getDouble(COL_WEATHER_MIN_TEMP);
             String lowString = Utils.formatTemperature(low, isMetric);
             mLowTempView.setText(lowString);
 
             // Read humidity from cursor and update view
-            float humidity = data.getFloat(WeatherDao.COL_WEATHER_HUMIDITY);
+            float humidity = data.getFloat(COL_WEATHER_HUMIDITY);
             mHumidityView.setText(getActivity().getString(R.string.format_humidity, humidity));
 
             // Read wind speed and direction from cursor and update view
-            float windSpeedStr = data.getFloat(WeatherDao.COL_WEATHER_WIND_SPEED);
-            float windDirStr = data.getFloat(WeatherDao.COL_WEATHER_DEGREES);
+            float windSpeedStr = data.getFloat(COL_WEATHER_WIND_SPEED);
+            float windDirStr = data.getFloat(COL_WEATHER_DEGREES);
             mWindView.setText(Utils.getFormattedWind(getActivity(), windSpeedStr, windDirStr));
 
             // Read pressure from cursor and update view
-            float pressure = data.getFloat(WeatherDao.COL_WEATHER_PRESSURE);
+            float pressure = data.getFloat(COL_WEATHER_PRESSURE);
             mPressureView.setText(getActivity().getString(R.string.format_pressure, pressure));
 
             // We still need this for the share intent

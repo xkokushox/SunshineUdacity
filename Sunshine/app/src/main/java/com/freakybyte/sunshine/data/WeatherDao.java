@@ -30,16 +30,16 @@ public class WeatherDao {
     private static WeatherDao singleton;
     private Context mContext;
 
-  public static final int COL_WEATHER_ID = 0;
-  public static final int COL_WEATHER_DATE = 1;
-  public static final int COL_WEATHER_DESC = 2;
-  public static final int COL_WEATHER_MAX_TEMP = 3;
-  public static final int COL_WEATHER_MIN_TEMP = 4;
-  public static final int COL_WEATHER_HUMIDITY = 5;
-  public static final int COL_WEATHER_PRESSURE = 6;
-  public static final int COL_WEATHER_WIND_SPEED = 7;
-  public static final int COL_WEATHER_DEGREES = 8;
-  public static final int COL_WEATHER_CONDITION_ID = 9;
+
+    public static final int COL_WEATHER_ID = 0;
+    public static final int COL_WEATHER_DATE = 1;
+    public static final int COL_WEATHER_DESC = 2;
+    public static final int COL_WEATHER_MAX_TEMP = 3;
+    public static final int COL_WEATHER_MIN_TEMP = 4;
+    public static final int COL_LOCATION_SETTING = 5;
+    public static final int COL_WEATHER_CONDITION_ID = 6;
+    public static final int COL_COORD_LAT = 7;
+    public static final int COL_COORD_LONG = 8;
 
     private static final String[] FORECAST_COLUMNS = {
             WeatherEntry.TABLE_NAME + "." + WeatherEntry._ID,
