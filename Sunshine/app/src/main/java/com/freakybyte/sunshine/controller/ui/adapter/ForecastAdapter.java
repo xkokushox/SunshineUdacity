@@ -23,6 +23,25 @@ public class ForecastAdapter extends CursorAdapter {
     private static final int VIEW_TYPE_TODAY = 0;
     private static final int VIEW_TYPE_FUTURE_DAY = 1;
 
+    /**
+     * Cache of the children views for a forecast list item.
+     */
+    public static class ViewHolder {
+        public final ImageView iconView;
+        public final TextView dateView;
+        public final TextView descriptionView;
+        public final TextView highTempView;
+        public final TextView lowTempView;
+
+        public ViewHolder(View view) {
+            iconView = (ImageView) view.findViewById(R.id.list_item_icon);
+            dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
+            descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
+            highTempView = (TextView) view.findViewById(R.id.list_item_high_textview);
+            lowTempView = (TextView) view.findViewById(R.id.list_item_low_textview);
+        }
+    }
+
     public ForecastAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
     }
@@ -42,45 +61,43 @@ public class ForecastAdapter extends CursorAdapter {
                 break;
             }
         }
-        return LayoutInflater.from(context).inflate(layoutId, parent, false);
-    }
 
+        View view = LayoutInflater.from(context).inflate(layoutId, parent, false);
+
+        ViewHolder viewHolder = new ViewHolder(view);
+        view.setTag(viewHolder);
+
+        return view;
+    }
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        // our view is pretty simple here --- just a text view
-        // we'll keep the UI functional with a simple (and slow!) binding.
 
-        // Read weather icon ID from cursor
-        int weatherId = cursor.getInt(WeatherDao.COL_WEATHER_ID);
+        ViewHolder viewHolder = (ViewHolder) view.getTag();
+
         // Use placeholder image for now
-        ImageView iconView = (ImageView) view.findViewById(R.id.list_item_icon);
-        iconView.setImageResource(R.mipmap.ic_launcher);
+        viewHolder.iconView.setImageResource(R.mipmap.ic_launcher);
 
         // Read date from cursor
         long dateInMillis = cursor.getLong(WeatherDao.COL_WEATHER_DATE);
         // Find TextView and set formatted date on it
-        TextView dateView = (TextView) view.findViewById(R.id.list_item_date_textview);
-        dateView.setText(Utils.getFriendlyDayString(context, dateInMillis));
+        viewHolder.dateView.setText(Utils.getFriendlyDayString(context, dateInMillis));
 
         // Read weather forecast from cursor
         String description = cursor.getString(WeatherDao.COL_WEATHER_DESC);
         // Find TextView and set weather forecast on it
-        TextView descriptionView = (TextView) view.findViewById(R.id.list_item_forecast_textview);
-        descriptionView.setText(description);
+        viewHolder.descriptionView.setText(description);
 
         // Read user preference for metric or imperial temperature units
         boolean isMetric = Utils.isMetric(context);
 
         // Read high temperature from cursor
         double high = cursor.getDouble(WeatherDao.COL_WEATHER_MAX_TEMP);
-        TextView highView = (TextView) view.findViewById(R.id.list_item_high_textview);
-        highView.setText(Utils.formatTemperature(high, isMetric));
+        viewHolder.highTempView.setText(Utils.formatTemperature(high, isMetric));
 
         // Read low temperature from cursor
         double low = cursor.getDouble(WeatherDao.COL_WEATHER_MIN_TEMP);
-        TextView lowView = (TextView) view.findViewById(R.id.list_item_low_textview);
-        lowView.setText(Utils.formatTemperature(low, isMetric));
+        viewHolder.lowTempView.setText(Utils.formatTemperature(low, isMetric));
     }
 
     @Override
