@@ -29,6 +29,7 @@ public class DetailActivity extends BaseActivity {
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_back_white);
 
         Bundle arguments = new Bundle();
+        arguments.putParcelable(DetailFragment.DETAIL_URI, getIntent().getData());
 
         DetailFragment fragment = new DetailFragment();
         fragment.setArguments(arguments);
