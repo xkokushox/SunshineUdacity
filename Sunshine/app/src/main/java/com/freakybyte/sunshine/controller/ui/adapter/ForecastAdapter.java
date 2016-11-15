@@ -102,6 +102,7 @@ public class ForecastAdapter extends CursorAdapter {
         String description = cursor.getString(WeatherDao.COL_WEATHER_DESC);
         // Find TextView and set weather forecast on it
         viewHolder.descriptionView.setText(description);
+        viewHolder.iconView.setContentDescription(description);
 
         // Read user preference for metric or imperial temperature units
         boolean isMetric = Utils.isMetric(context);
