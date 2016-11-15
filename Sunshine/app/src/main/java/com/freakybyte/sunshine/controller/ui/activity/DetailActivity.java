@@ -18,8 +18,6 @@ public class DetailActivity extends BaseActivity {
     @BindView(R.id.toolbar)
     public Toolbar toolbar;
 
-    private DetailFragment mPlaceholderFragment;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,11 +28,14 @@ public class DetailActivity extends BaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_back_white);
 
+        Bundle arguments = new Bundle();
+
+        DetailFragment fragment = new DetailFragment();
+        fragment.setArguments(arguments);
+
         if (savedInstanceState == null) {
-            mPlaceholderFragment = new DetailFragment();
-            mPlaceholderFragment.setArguments(getIntent().getExtras());
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, mPlaceholderFragment)
+                    .add(R.id.weather_detail_container, fragment)
                     .commit();
         }
     }

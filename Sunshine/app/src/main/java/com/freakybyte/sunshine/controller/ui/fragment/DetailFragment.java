@@ -2,6 +2,7 @@ package com.freakybyte.sunshine.controller.ui.fragment;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 
 import com.freakybyte.sunshine.R;
 import com.freakybyte.sunshine.data.WeatherDao;
+import com.freakybyte.sunshine.data.tables.WeatherEntry;
 import com.freakybyte.sunshine.utils.Utils;
 
 import butterknife.BindView;
@@ -32,6 +34,7 @@ import butterknife.ButterKnife;
 public class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final static String TAG = "DetailFragment";
+    public static final String DETAIL_URI = "URI";
 
     @BindView(R.id.detail_icon)
     public ImageView mIconView;
@@ -55,7 +58,9 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     private static final String FORECAST_SHARE_HASHTAG = " #SunshineApp";
     private ShareActionProvider mShareActionProvider;
     private String mForecastStr;
+    private Uri mUri;
     private WeatherDao mWeatherDao;
+
     private static final int DETAIL_LOADER = 0;
 
     public static final int COL_WEATHER_ID = 0;
@@ -78,6 +83,11 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         ButterKnife.bind(this, rootView);
         setHasOptionsMenu(true);
+
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mUri = arguments.getParcelable(DetailFragment.DETAIL_URI);
+        }
         return rootView;
     }
 
@@ -114,11 +124,22 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         getLoaderManager().initLoader(DETAIL_LOADER, null, this);
     }
 
+    public void onLocationChanged(String newLocation) {
+        // replace the uri, since the location has changed
+        Uri uri = mUri;
+        if (null != uri) {
+            long date = WeatherEntry.getDateFromUri(uri);
+            Uri updatedUri = WeatherEntry.buildWeatherLocationWithDate(newLocation, date);
+            mUri = updatedUri;
+            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+        }
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.v(TAG, "In onCreateLoader");
         Intent intent = getActivity().getIntent();
-        if (intent == null) {
+        if ( null == mUri ) {
             return null;
         }
 
@@ -131,7 +152,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             // Read weather condition ID from cursor
             int weatherId = data.getInt(COL_WEATHER_CONDITION_ID);
             // Use placeholder Image
-            mIconView.setImageResource(R.mipmap.ic_launcher);
+            mIconView.setImageResource(Utils.getArtResourceForWeatherCondition(weatherId));
 
             // Read date from cursor and update views for day of week and date
             long date = data.getLong(COL_WEATHER_DATE);

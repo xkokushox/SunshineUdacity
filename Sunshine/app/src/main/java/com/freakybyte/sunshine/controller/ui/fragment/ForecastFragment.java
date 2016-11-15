@@ -28,6 +28,7 @@ import com.freakybyte.sunshine.R;
 import com.freakybyte.sunshine.controller.ui.activity.DetailActivity;
 import com.freakybyte.sunshine.controller.ui.activity.SettingsActivity;
 import com.freakybyte.sunshine.controller.ui.adapter.ForecastAdapter;
+import com.freakybyte.sunshine.controller.ui.listener.CallbackWeather;
 import com.freakybyte.sunshine.data.WeatherDao;
 import com.freakybyte.sunshine.data.tables.WeatherEntry;
 import com.freakybyte.sunshine.model.WeatherModel;
@@ -88,11 +89,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(i);
                 if (cursor != null) {
                     String locationSetting = Utils.getPreferredLocation(getActivity());
-                    Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .setData(WeatherEntry.buildWeatherLocationWithDate(
+                    ((CallbackWeather) getActivity())
+                            .onItemSelected(WeatherEntry.buildWeatherLocationWithDate(
                                     locationSetting, cursor.getLong(WeatherDao.COL_WEATHER_DATE)
                             ));
-                    startActivity(intent);
                 }
             }
         });
