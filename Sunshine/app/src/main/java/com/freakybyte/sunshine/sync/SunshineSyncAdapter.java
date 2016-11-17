@@ -8,29 +8,80 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SyncResult;
 import android.os.Bundle;
+import android.support.v4.util.ArrayMap;
 import android.util.Log;
 
 import com.freakybyte.sunshine.R;
+import com.freakybyte.sunshine.data.WeatherDao;
+import com.freakybyte.sunshine.model.WeatherModel;
+import com.freakybyte.sunshine.utils.DebugUtils;
+import com.freakybyte.sunshine.utils.Utils;
+import com.freakybyte.sunshine.web.retrofit.OpenWeatherMapService;
+import com.freakybyte.sunshine.web.retrofit.RetrofitBuilder;
+
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by Jose Torres on 16/11/2016.
  */
 
-public class SunshineSyncAdapter  extends AbstractThreadedSyncAdapter {
+public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
+    private OpenWeatherMapService apiService;
 
     public SunshineSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
+        apiService = RetrofitBuilder.getRetrofitBuilder().create(OpenWeatherMapService.class);
     }
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         Log.d(LOG_TAG, "onPerformSync Called.");
 
+
+        final String locationQuery = Utils.getPreferredLocation(getContext());
+
+        String format = "json";
+        String units = "metric";
+        int numDays = 14;
+
+        Map<String, String> params = new ArrayMap<>();
+        params.put("q", locationQuery);
+        params.put("mode", format);
+        params.put("units", units);
+        params.put("cnt", String.valueOf(numDays));
+        params.put("appid", getContext().getString(R.string.api));
+        Call<WeatherModel> call = apiService.getWeatherByPostalCode(params);
+        call.enqueue(new Callback<WeatherModel>() {
+            @Override
+            public void onResponse(Call<WeatherModel> call, Response<WeatherModel> response) {
+
+                switch (response.code()) {
+                    case 200:
+                        WeatherDao mWeatherDao = WeatherDao.getInstance();
+                        mWeatherDao.addWeatherList(locationQuery, response.body());
+                        break;
+                    default:
+                        DebugUtils.logError(LOG_TAG, "LogInInServer:: Error Code:: " + response.code());
+                        break;
+                }
+            }
+
+            @Override
+            public void onFailure(Call<WeatherModel> call, Throwable t) {
+                DebugUtils.logError(LOG_TAG, "GetWeatherReport:: onFailure:: " + t.getLocalizedMessage());
+            }
+
+        });
     }
 
     /**
      * Helper method to have the sync adapter sync immediately
+     *
      * @param context The context used to access the account service
      */
     public static void syncImmediately(Context context) {
@@ -59,7 +110,7 @@ public class SunshineSyncAdapter  extends AbstractThreadedSyncAdapter {
                 context.getString(R.string.app_name), context.getString(R.string.sync_account_type));
 
         // If the password doesn't exist, the account doesn't exist
-        if ( null == accountManager.getPassword(newAccount) ) {
+        if (null == accountManager.getPassword(newAccount)) {
 
         /*
          * Add the account and account type, no password or user data
