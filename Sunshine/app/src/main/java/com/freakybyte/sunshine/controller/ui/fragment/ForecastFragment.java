@@ -1,5 +1,8 @@
 package com.freakybyte.sunshine.controller.ui.fragment;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -28,6 +31,8 @@ import com.freakybyte.sunshine.controller.ui.listener.CallbackWeather;
 import com.freakybyte.sunshine.data.WeatherDao;
 import com.freakybyte.sunshine.data.tables.WeatherEntry;
 import com.freakybyte.sunshine.model.WeatherModel;
+import com.freakybyte.sunshine.service.SunshineService;
+import com.freakybyte.sunshine.sync.SunshineSyncAdapter;
 import com.freakybyte.sunshine.utils.DebugUtils;
 import com.freakybyte.sunshine.utils.Utils;
 import com.freakybyte.sunshine.web.retrofit.OpenWeatherMapService;
@@ -57,7 +62,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     private OpenWeatherMapService apiService;
     private ForecastAdapter mForecastAdapter;
 
-    private static final int FORECAST_LOADER = 0;
+    private static final int FORECAST_LOADER = 0X1;
     private String mLocation = "";
     private int mPosition = ListView.INVALID_POSITION;
     private boolean mUseTodayLayout;
@@ -149,9 +154,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     private void updateWeather() {
-        mLocation = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
-        String unit = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_units_metric));
-        getWeatherReport(mLocation, "json", unit, 14);
+        SunshineSyncAdapter.syncImmediately(getActivity());
     }
 
     private void getWeatherReport(final String zipCode, String mode, String unit, int count) {
@@ -213,9 +216,14 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String locationSetting = Utils.getPreferredLocation(getActivity());
+        switch (id) {
+            case FORECAST_LOADER:
+                String locationSetting = Utils.getPreferredLocation(getActivity());
 
-        return mWeatherDao.getWeatherCursorWithStartDate(locationSetting);
+                return mWeatherDao.getWeatherCursorWithStartDate(locationSetting);
+            default:
+                return null;
+        }
     }
 
     @Override
