@@ -1,5 +1,8 @@
 package com.freakybyte.sunshine.controller.ui.fragment;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -9,10 +12,8 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.ArrayMap;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -21,23 +22,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.freakybyte.sunshine.R;
-import com.freakybyte.sunshine.controller.ui.activity.DetailActivity;
 import com.freakybyte.sunshine.controller.ui.activity.SettingsActivity;
 import com.freakybyte.sunshine.controller.ui.adapter.ForecastAdapter;
+import com.freakybyte.sunshine.controller.ui.listener.CallbackWeather;
 import com.freakybyte.sunshine.data.WeatherDao;
 import com.freakybyte.sunshine.data.tables.WeatherEntry;
 import com.freakybyte.sunshine.model.WeatherModel;
+import com.freakybyte.sunshine.service.SunshineService;
+import com.freakybyte.sunshine.sync.SunshineSyncAdapter;
 import com.freakybyte.sunshine.utils.DebugUtils;
-import com.freakybyte.sunshine.utils.SunshineUtil;
 import com.freakybyte.sunshine.utils.Utils;
 import com.freakybyte.sunshine.web.retrofit.OpenWeatherMapService;
 import com.freakybyte.sunshine.web.retrofit.RetrofitBuilder;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import butterknife.BindView;
@@ -51,6 +51,7 @@ import retrofit2.Response;
  */
 public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static String TAG = "ForecastFragment";
+    private static final String SELECTED_KEY = "selected_position";
 
     private View rootView;
     @BindView(R.id.listview_forecast)
@@ -60,9 +61,11 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     private OpenWeatherMapService apiService;
     private ForecastAdapter mForecastAdapter;
-    private String mLocation = "";
 
-    private static final int FORECAST_LOADER = 0;
+    private static final int FORECAST_LOADER = 0X1;
+    private String mLocation = "";
+    private int mPosition = ListView.INVALID_POSITION;
+    private boolean mUseTodayLayout;
 
     private SharedPreferences prefs;
 
@@ -88,18 +91,26 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(i);
                 if (cursor != null) {
                     String locationSetting = Utils.getPreferredLocation(getActivity());
-                    Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .setData(WeatherEntry.buildWeatherLocationWithDate(
+                    ((CallbackWeather) getActivity())
+                            .onItemSelected(WeatherEntry.buildWeatherLocationWithDate(
                                     locationSetting, cursor.getLong(WeatherDao.COL_WEATHER_DATE)
                             ));
-                    startActivity(intent);
                 }
+                mPosition = i;
             }
         });
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            // The listview probably hasn't even been populated yet.  Actually perform the
+            // swapout in onLoadFinished.
+            mPosition = savedInstanceState.getInt(SELECTED_KEY);
+        }
 
         mWeatherDao = WeatherDao.getInstance();
 
         setHasOptionsMenu(true);
+
+        mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
+
         return rootView;
     }
 
@@ -127,14 +138,23 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             updateWeather();
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // When tablets rotate, the currently selected list item needs to be saved.
+        // When no item is selected, mPosition will be set to Listview.INVALID_POSITION,
+        // so check for that before storing.
+        if (mPosition != ListView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, mPosition);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
     private void getWeatherFromDb() {
         getLoaderManager().initLoader(FORECAST_LOADER, null, ForecastFragment.this);
     }
 
     private void updateWeather() {
-        mLocation = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
-        String unit = prefs.getString(getString(R.string.pref_location_key), getString(R.string.pref_units_metric));
-        getWeatherReport(mLocation, "json", unit, 14);
+        SunshineSyncAdapter.syncImmediately(getActivity());
     }
 
     private void getWeatherReport(final String zipCode, String mode, String unit, int count) {
@@ -196,19 +216,37 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String locationSetting = Utils.getPreferredLocation(getActivity());
+        switch (id) {
+            case FORECAST_LOADER:
+                String locationSetting = Utils.getPreferredLocation(getActivity());
 
-        return mWeatherDao.getWeatherCursorWithStartDate(locationSetting);
+                return mWeatherDao.getWeatherCursorWithStartDate(locationSetting);
+            default:
+                return null;
+        }
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mForecastAdapter.swapCursor(cursor);
+
+        if (mPosition != ListView.INVALID_POSITION) {
+            // If we don't need to restart the loader, and there's a desired position to restore
+            // to, do so now.
+            listView.smoothScrollToPosition(mPosition);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mForecastAdapter.swapCursor(null);
+    }
+
+    public void setUseTodayLayout(boolean useTodayLayout) {
+        mUseTodayLayout = useTodayLayout;
+        if (mForecastAdapter != null) {
+            mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
+        }
     }
 
     private void openPreferredLocationInMap() {

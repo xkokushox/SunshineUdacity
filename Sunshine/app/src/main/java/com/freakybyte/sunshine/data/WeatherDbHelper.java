@@ -15,7 +15,7 @@ import com.freakybyte.sunshine.data.tables.WeatherEntry;
 public class WeatherDbHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     public static final long FAIL_DB_MODIFY = -1L;
 
     static final String DATABASE_NAME = "weather.db";

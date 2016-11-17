@@ -10,8 +10,7 @@
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="8dp">
+        android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -24,12 +23,12 @@
     </android.support.design.widget.AppBarLayout>
 
 
-    <FrameLayout
-        android:id="@+id/container"
+    <fragment
+        android:id="@+id/fragment_forecast"
+        android:name="com.freakybyte.sunshine.controller.ui.fragment.ForecastFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/appBarLayout"
-        android:background="@android:color/white"
-        tools:context=".controller.ui.activity.MainActivity"
-        tools:ignore="MergeRootFrame"/>
+        tools:context="com.example.android.sunshine.app.ForecastFragment"
+        tools:layout="@android:layout/list_content"/>
 </RelativeLayout>

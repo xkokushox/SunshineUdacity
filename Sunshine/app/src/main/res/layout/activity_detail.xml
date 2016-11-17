@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".controller.ui.activity.MainActivity"
+    tools:context="com.freakybyte.sunshine.controller.ui.activity.DetailActivity"
     tools:ignore="MergeRootFrame">
 
 
@@ -25,7 +25,7 @@
 
 
     <FrameLayout
-        android:id="@+id/container"
+        android:id="@+id/weather_detail_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/appBarLayout"

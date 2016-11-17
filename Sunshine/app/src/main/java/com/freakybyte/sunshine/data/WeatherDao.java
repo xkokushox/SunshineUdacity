@@ -30,6 +30,7 @@ public class WeatherDao {
     private static WeatherDao singleton;
     private Context mContext;
 
+
     public static final int COL_WEATHER_ID = 0;
     public static final int COL_WEATHER_DATE = 1;
     public static final int COL_WEATHER_DESC = 2;
@@ -50,6 +51,22 @@ public class WeatherDao {
             WeatherEntry.COLUMN_WEATHER_ID,
             LocationEntry.COLUMN_COORD_LAT,
             LocationEntry.COLUMN_COORD_LONG
+    };
+
+    private static final String[] DETAIL_COLUMNS = {
+            WeatherEntry.TABLE_NAME + "." + WeatherEntry._ID,
+            WeatherEntry.COLUMN_DATE,
+            WeatherEntry.COLUMN_SHORT_DESC,
+            WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherEntry.COLUMN_HUMIDITY,
+            WeatherEntry.COLUMN_PRESSURE,
+            WeatherEntry.COLUMN_WIND_SPEED,
+            WeatherEntry.COLUMN_DEGREES,
+            WeatherEntry.COLUMN_WEATHER_ID,
+            // This works because the WeatherProvider returns location data joined with
+            // weather data, even though they're stored in two different tables.
+            LocationEntry.COLUMN_LOCATION_SETTING
     };
 
 
@@ -143,7 +160,7 @@ public class WeatherDao {
         return new CursorLoader(
                 getContext(),
                 uri,
-                FORECAST_COLUMNS,
+                DETAIL_COLUMNS,
                 null,
                 null,
                 null
