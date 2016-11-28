@@ -129,6 +129,10 @@ public class WeatherDao {
             cVVector.toArray(cvArray);
             getContext().getContentResolver().bulkInsert(WeatherEntry.CONTENT_URI, cvArray);
 
+            getContext().getContentResolver().delete(WeatherEntry.CONTENT_URI,
+                    WeatherEntry.COLUMN_DATE + " <= ?",
+                    new String[]{Long.toString(dayTime.setJulianDay(julianStartDay - 1))});
+
             NotificationUtils.notifyWeather();
         }
 
