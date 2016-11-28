@@ -31,7 +31,7 @@ public class SunshineUtil {
 
     private String formatHighLows(Context mContext, double high, double low) {
         boolean isMetric = Utils.isMetric(mContext);
-        String highLowStr = Utils.formatTemperature(high, isMetric) + "/" + Utils.formatTemperature(low, isMetric);
+        String highLowStr = Utils.formatTemperature(high) + "/" + Utils.formatTemperature(low);
         return highLowStr;
     }
 }

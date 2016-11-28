@@ -109,11 +109,11 @@ public class ForecastAdapter extends CursorAdapter {
 
         // Read high temperature from cursor
         double high = cursor.getDouble(WeatherDao.COL_WEATHER_MAX_TEMP);
-        viewHolder.highTempView.setText(Utils.formatTemperature(high, isMetric));
+        viewHolder.highTempView.setText(Utils.formatTemperature(high));
 
         // Read low temperature from cursor
         double low = cursor.getDouble(WeatherDao.COL_WEATHER_MIN_TEMP);
-        viewHolder.lowTempView.setText(Utils.formatTemperature(low, isMetric));
+        viewHolder.lowTempView.setText(Utils.formatTemperature(low));
     }
 
     @Override

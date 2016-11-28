@@ -2,22 +2,27 @@ package com.freakybyte.sunshine.data;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v4.content.CursorLoader;
 import android.text.format.Time;
 import android.util.Log;
 
+import com.freakybyte.sunshine.R;
 import com.freakybyte.sunshine.SunshineApplication;
 import com.freakybyte.sunshine.data.tables.LocationEntry;
 import com.freakybyte.sunshine.data.tables.WeatherEntry;
 import com.freakybyte.sunshine.model.ListModel;
 import com.freakybyte.sunshine.model.WeatherModel;
+import com.freakybyte.sunshine.utils.NotificationUtils;
 import com.freakybyte.sunshine.utils.Utils;
 
 import java.util.Vector;
 
+import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static com.freakybyte.sunshine.utils.SunshineUtil.formatHighLows;
 
 /**
@@ -123,6 +128,8 @@ public class WeatherDao {
             ContentValues[] cvArray = new ContentValues[cVVector.size()];
             cVVector.toArray(cvArray);
             getContext().getContentResolver().bulkInsert(WeatherEntry.CONTENT_URI, cvArray);
+
+            NotificationUtils.notifyWeather();
         }
 
         String sortOrder = WeatherEntry.COLUMN_DATE + " ASC";
