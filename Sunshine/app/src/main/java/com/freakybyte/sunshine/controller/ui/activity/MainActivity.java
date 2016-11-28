@@ -10,6 +10,7 @@ import com.freakybyte.sunshine.R;
 import com.freakybyte.sunshine.controller.ui.fragment.DetailFragment;
 import com.freakybyte.sunshine.controller.ui.fragment.ForecastFragment;
 import com.freakybyte.sunshine.controller.ui.listener.CallbackWeather;
+import com.freakybyte.sunshine.sync.SunshineSyncAdapter;
 import com.freakybyte.sunshine.utils.Utils;
 
 import butterknife.BindView;
@@ -55,6 +56,8 @@ public class MainActivity extends BaseActivity implements CallbackWeather {
         ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_forecast));
         forecastFragment.setUseTodayLayout(!mTwoPane);
+
+        SunshineSyncAdapter.initializeSyncAdapter(this);
     }
 
     @Override
